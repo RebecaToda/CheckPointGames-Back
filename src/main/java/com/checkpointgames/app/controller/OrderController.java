@@ -1,5 +1,6 @@
 package com.checkpointgames.app.controller;
 
+import com.checkpointgames.app.dto.OrderRequestDTO; // Import do DTO novo
 import com.checkpointgames.app.entity.Order;
 import com.checkpointgames.app.service.OrderService;
 import com.checkpointgames.app.service.PaymentService;
@@ -22,18 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
-    
+
     @Autowired
     private OrderService orderService;
 
     @Autowired
     private PaymentService paymentService;
-    
-    
+
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody Order order) {
+    public ResponseEntity<?> create(@RequestBody OrderRequestDTO orderRequest) { // Usa o DTO
         try {
-            Order saved = orderService.saveOrder(order);
+            Order saved = orderService.createOrder(orderRequest);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Pedido criado com sucesso",
@@ -44,61 +44,54 @@ public class OrderController {
             ));
 
         } catch (Exception e) {
+            e.printStackTrace(); // <--- ISSO VAI MOSTRAR O ERRO VERMELHO NO CONSOLE
             return ResponseEntity.status(500).body(Map.of(
-                    "error", e.getMessage(),
+                    "message", e.getMessage() != null ? e.getMessage() : "Erro interno no servidor", // <--- Mudei de "error" para "message" para o Front ler
                     "status", 500
             ));
         }
     }
-    
+
     @GetMapping("/verificar-pagamento")
     public String verificarPagamento(@RequestParam String preferenceId) throws MPException, MPApiException {
         paymentService.verificarPagamento(preferenceId);
         return "Consulta de pagamento realizada. Confira o console para detalhes.";
     }
 
-
-    // UPDATE
     @PostMapping("/updateOrder")
     public Order updateOrder(@Valid @RequestBody Order order) {
         return orderService.updateOrder(order);
     }
 
-    // LIST ALL
     @GetMapping("/showOrders")
     public List<Order> showOrders(Order order) {
         return orderService.showGames(order);
     }
-    
-    // LIST OPEN
+
     @GetMapping("/showOpenOrders")
     public List<Order> showOpenOrders(Order order) {
         return orderService.showOpenOrders(order);
     }
 
-    // LIST CLOSED
     @GetMapping("/showClosedOrders")
     public List<Order> showClosedOrders(Order order) {
         return orderService.showClosedOrders(order);
     }
 
-    // LIST CANCELED
     @GetMapping("/showCanceledOrders")
     public List<Order> showCanceledOrders(Order order) {
         return orderService.showCanceledOrders(order);
     }
 
-    // LIST BY CUSTOMER
     @GetMapping("/showOrdersByCostumer/{id}")
     public List<Order> showOrderByCostumer(@PathVariable Integer id) {
         return orderService.showOrderByCostumer(id);
     }
 
-    // LIST BY ID
     @GetMapping("/showOrdersById/{id}")
     public ResponseEntity<Order> showOrdersById(@PathVariable Integer id) {
         return orderService.findById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
