@@ -1,110 +1,99 @@
-
 package com.checkpointgames.app.service;
 
 import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
+import com.mercadopago.net.MPResultsResourcesPage;
 import com.mercadopago.net.MPSearchRequest;
 import com.mercadopago.resources.payment.Payment;
-import com.mercadopago.net.MPResultsResourcesPage;
 import com.mercadopago.resources.preference.Preference;
-import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentService {
-    
+
     private final PaymentClient paymentClient;
-    
-    public PaymentService() {      
+
+    // Construtor que pega o token do arquivo application.properties automaticamente
+    public PaymentService(@Value("${mercadopago.access-token}") String accessToken) {
+        // Configura o token globalmente para o SDK
+        MercadoPagoConfig.setAccessToken(accessToken);
         this.paymentClient = new PaymentClient();
+        System.out.println("Mercado Pago configurado com token: " + accessToken.substring(0, 10) + "...");
     }
-
-    @Configuration
-    public class MercadoPagoConfigClass {
-
-        public MercadoPagoConfigClass(@Value("${mercadopago.access-token}") String accessToken) {
-            MercadoPagoConfig.setAccessToken(accessToken);
-        }
-    }
-
 
     public String createCheckoutPreference(Integer orderId, String title, Integer quantity, BigDecimal value) throws Exception {
 
-        // ITEM
-        PreferenceItemRequest item = PreferenceItemRequest.builder()
-                .title(title)
-                .quantity(quantity)
-                .unitPrice(value) 
-                .currencyId("BRL") // opcional, mas recomendado
-                .build();
+        if (value.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("O valor do pedido deve ser maior que zero.");
+        }
 
-        // BACKURLS
-        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("http://localhost:5000/payment/callback")
-                .pending("http://localhost:5000/payment/callback")
-                .failure("http://localhost:5000/payment/callback")
-                .build();
+        try {
+            PreferenceItemRequest item = PreferenceItemRequest.builder()
+                    .title(title)
+                    .quantity(quantity)
+                    .unitPrice(value)
+                    .currencyId("BRL")
+                    .build();
 
-        // REQUEST
-        PreferenceRequest request = PreferenceRequest.builder()
-            .externalReference(String.valueOf(orderId))
-            .items(List.of(item))
-            .backUrls(backUrls)
-            .autoReturn("approved")
-            .build();
-        // CLIENT
-        PreferenceClient client = new PreferenceClient();
+            // Mudei para google.com temporariamente para garantir que o MP não rejeite "localhost"
+            // Depois que funcionar, você pode tentar voltar para localhost
+            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                    .success("https://www.google.com")
+                    .pending("https://www.google.com")
+                    .failure("https://www.google.com")
+                    .build();
 
-        // CREATE PREF
-        Preference preference = client.create(request);
+            PreferenceRequest request = PreferenceRequest.builder()
+                    .externalReference(String.valueOf(orderId))
+                    .items(List.of(item))
+                    .backUrls(backUrls)
+                    // .autoReturn("approved")  <-- REMOVIDO: Isso estava causando o erro 400
+                    .build();
 
-        return preference.getInitPoint();
+            PreferenceClient client = new PreferenceClient();
+            Preference preference = client.create(request);
+
+            System.out.println("Link gerado: " + preference.getInitPoint());
+            return preference.getInitPoint();
+
+        } catch (MPApiException e) {
+            System.err.println("ERRO MERCADO PAGO API: " + e.getApiResponse().getContent());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("ERRO GENÉRICO: " + e.getMessage());
+            throw e;
+        }
     }
-    
+
     public void verificarPagamento(String preferenceId) throws MPException, MPApiException {
-        // Criar filtros para buscar pagamentos por preference_id
         Map<String, Object> filtros = new HashMap<>();
         filtros.put("preference_id", preferenceId);
 
-        // Montar a requisição de busca
         MPSearchRequest request = MPSearchRequest.builder()
                 .filters(filtros)
-                .limit(50)  // opcional
-                .offset(0)  // opcional
+                .limit(50)
+                .offset(0)
                 .build();
 
-        // Buscar pagamentos
         MPResultsResourcesPage<Payment> page = paymentClient.search(request);
         List<Payment> pagamentos = page.getResults();
 
-        // Verificar se existe algum pagamento
-        if (pagamentos.isEmpty()) {
-            System.out.println("Nenhum pagamento encontrado ainda para esta preferência.");
-        } else {
+        if (!pagamentos.isEmpty()) {
             for (Payment p : pagamentos) {
-                System.out.println("=== Pagamento Encontrado ===");
-                System.out.println("Payment ID: " + p.getId());
-                System.out.println("Status: " + p.getStatus());             // approved, pending, rejected
-                System.out.println("Detalhes do Status: " + p.getStatusDetail());
-                System.out.println("Valor pago: " + p.getTransactionAmount());
-                System.out.println("Método de pagamento: " + p.getPaymentMethodId());
+                System.out.println("Pagamento ID: " + p.getId() + " | Status: " + p.getStatus());
             }
         }
     }
-    
 }
-    
