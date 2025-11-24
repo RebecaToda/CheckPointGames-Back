@@ -25,7 +25,7 @@ public class PaymentService {
 
     private final PaymentClient paymentClient;
 
-    
+
     public PaymentService(@Value("${mercadopago.access-token}") String accessToken) {
         MercadoPagoConfig.setAccessToken(accessToken);
         this.paymentClient = new PaymentClient();
