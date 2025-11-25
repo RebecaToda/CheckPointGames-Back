@@ -36,7 +36,7 @@ public class SecurityConfig {
 
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5000", "http://0.0.0.0:5000")); // Permite o frontend
+                    corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5000", "http://0.0.0.0:5000", "https://nonderivable-jennell-overgesticulatively.ngrok-free.dev")); // Permite o frontend
                     corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
                     return corsConfiguration;
