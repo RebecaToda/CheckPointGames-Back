@@ -1,25 +1,24 @@
 package com.checkpointgames.app.service;
 
 import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.preference.Preference;
-import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentService {
 
     private final PaymentClient paymentClient;
-
 
     public PaymentService(@Value("${mercadopago.access-token}") String accessToken) {
         MercadoPagoConfig.setAccessToken(accessToken);
@@ -41,19 +40,21 @@ public class PaymentService {
                     .currencyId("BRL")
                     .build();
 
+            String baseUrl = "https://nonderivable-jennell-overgesticulatively.ngrok-free.dev";
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://nonderivable-jennell-overgesticulatively.ngrok-free.dev/")
-                    .pending("https://nonderivable-jennell-overgesticulatively.ngrok-free.dev/")
-                    .failure("https://nonderivable-jennell-overgesticulatively.ngrok-free.dev/")
+                    .success(baseUrl + "/payment/callback")
+                    .pending(baseUrl + "/payment/callback")
+                    .failure(baseUrl + "/payment/callback")
                     .build();
 
+
             PreferenceRequest request = PreferenceRequest.builder()
-                .externalReference(String.valueOf(orderId))
-                .items(List.of(item))
-                .backUrls(backUrls)
-                .autoReturn("approved")
-                .build();
+                    .externalReference(String.valueOf(orderId))
+                    .items(List.of(item))
+                    .backUrls(backUrls)
+                    .autoReturn("approved")
+                    .build();
 
             PreferenceClient client = new PreferenceClient();
             Preference preference = client.create(request);

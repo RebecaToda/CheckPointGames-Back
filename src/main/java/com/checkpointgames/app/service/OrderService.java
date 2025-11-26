@@ -117,4 +117,11 @@ public class OrderService {
     public Optional<Order> findById(Integer id) { return ordersRepository.findById(id); }
 
     public Order updateOrder(Order order) { return ordersRepository.save(order); }
+
+    public List<Order> findMyOrders(String email) {
+        Users user = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return ordersRepository.findByClient(user.getId());
+    }
 }
+
