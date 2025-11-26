@@ -56,7 +56,6 @@ public class OrderController {
     @GetMapping("/user")
     public ResponseEntity<?> getMyOrders() {
         try {
-
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
             Users user = usersRepository.findByEmail(email)
@@ -71,6 +70,47 @@ public class OrderController {
         }
     }
 
+
     @GetMapping("/verificar-pagamento")
     public String verificarPagamento(@RequestParam String preferenceId) throws MPException, MPApiException {
-        paymentService.
+        paymentService.verificarPagamento(preferenceId);
+        return "Consulta de pagamento realizada. Confira o console para detalhes.";
+    }
+
+    @PostMapping("/updateOrder")
+    public Order updateOrder(@Valid @RequestBody Order order) {
+        return orderService.updateOrder(order);
+    }
+
+    @GetMapping("/showOrders")
+    public List<Order> showOrders(Order order) {
+        return orderService.showGames(order);
+    }
+
+    @GetMapping("/showOpenOrders")
+    public List<Order> showOpenOrders(Order order) {
+        return orderService.showOpenOrders(order);
+    }
+
+    @GetMapping("/showClosedOrders")
+    public List<Order> showClosedOrders(Order order) {
+        return orderService.showClosedOrders(order);
+    }
+
+    @GetMapping("/showCanceledOrders")
+    public List<Order> showCanceledOrders(Order order) {
+        return orderService.showCanceledOrders(order);
+    }
+
+    @GetMapping("/showOrdersByCostumer/{id}")
+    public List<Order> showOrderByCostumer(@PathVariable Integer id) {
+        return orderService.showOrderByCostumer(id);
+    }
+
+    @GetMapping("/showOrdersById/{id}")
+    public ResponseEntity<Order> showOrdersById(@PathVariable Integer id) {
+        return orderService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
