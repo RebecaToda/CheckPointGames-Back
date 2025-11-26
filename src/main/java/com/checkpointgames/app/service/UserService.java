@@ -8,42 +8,53 @@ import org.springframework.stereotype.Service;
 import com.checkpointgames.app.repository.UsersRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.List;
+
 @Service
 public class UserService{
-    
+
     @Autowired
     private UsersRepository usersRepository;
-    
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    
+
     public Users saveUser(Users user){
         String encryptedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encryptedPassword);
-        
+
         return usersRepository.save(user);
     }
-    
+
     public Users updatePassword(UpdatePasswordDTO updatePassword) {
         usersRepository.findByEmail(updatePassword.getEmail())
-            .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));        
-        
+                .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));
+
         String encrypted = passwordEncoder.encode(updatePassword.getPassword());
         usersRepository.updatePassword(updatePassword.getEmail(), encrypted);
-        
+
         return usersRepository.findByEmail(updatePassword.getEmail())
-            .orElseThrow(() -> new RuntimeException("Erro ao atualizar a senha"));
-    }    
-    
+                .orElseThrow(() -> new RuntimeException("Erro ao atualizar a senha"));
+    }
+
     public Users updateUser(Users user){
         usersRepository.findByEmail(user.getEmail())
-            .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));        
-        
-        String encrypted = passwordEncoder.encode(user.getPassword());
-        usersRepository.updateUser(user.getEmail(), user.getName(), user.getAge(), user.getFunction(), user.getStatus(), encrypted, user.getNumber(), user.getId());        
-    
-        return usersRepository.findByEmail(user.getEmail())
-            .orElseThrow(() -> new RuntimeException("Erro ao atualizar usuário"));
-    }  
-            
-}
+                .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));
 
+        String encrypted = passwordEncoder.encode(user.getPassword());
+        usersRepository.updateUser(user.getEmail(), user.getName(), user.getAge(), user.getFunction(), user.getStatus(), encrypted, user.getNumber(), user.getId());
+
+        return usersRepository.findByEmail(user.getEmail())
+                .orElseThrow(() -> new RuntimeException("Erro ao atualizar usuário"));
+    }
+
+    public List<Users> findAll() {
+        return usersRepository.findAll();
+    }
+
+    public Users updateStatus(Integer id, Integer status) {
+        Users user = usersRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        user.setStatus(status);
+        return usersRepository.save(user);
+    }
+}
