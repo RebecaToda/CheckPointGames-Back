@@ -1,18 +1,19 @@
 package com.checkpointgames.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ITENS")
 public class Itens {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    
+
     @NotNull
     @ManyToOne(optional = true)
     @JoinColumn(name = "ID_GAME", referencedColumnName = "ID")
@@ -21,6 +22,7 @@ public class Itens {
     @NotNull
     @ManyToOne(optional = true)
     @JoinColumn(name = "ID_ORDER", referencedColumnName = "ID")
+    @JsonIgnore
     private Order idOrder;
 
     @ManyToOne(optional = false)
@@ -29,68 +31,36 @@ public class Itens {
 
     @Column(name = "DISCOUNT", precision = 15, scale = 3)
     private BigDecimal discount;
-    
+
     @Column(name = "ADDITION", precision = 15, scale = 3)
     private BigDecimal addition;
-    
+
     @Column(name = "VALUE", precision = 15, scale = 3)
+    @JsonProperty("price")
     private BigDecimal value;
 
-    public Integer getId() {
-        return id;
+    @JsonProperty("gameTitle")
+    public String getGameTitle() {
+        return idGame != null ? idGame.getName() : "Jogo";
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    @JsonProperty("quantity")
+    public Integer getQuantity() {
+        return 1;
     }
 
-    public Games getIdGame() {
-        return idGame;
-    }
-
-    public void setIdGame(Games idGame) {
-        this.idGame = idGame;
-    }
-
-    public Order getIdOrder() {
-        return idOrder;
-    }
-
-    public void setIdOrder(Order idOrder) {
-        this.idOrder = idOrder;
-    }
-
-    public GameKeys getIdKey() {
-        return idKey;
-    }
-
-    public void setIdKey(GameKeys idKey) {
-        this.idKey = idKey;
-    }
-
-    public BigDecimal getDiscount() {
-        return discount;
-    }
-
-    public void setDiscount(BigDecimal discount) {
-        this.discount = discount;
-    }
-
-    public BigDecimal getAddition() {
-        return addition;
-    }
-
-    public void setAddition(BigDecimal addition) {
-        this.addition = addition;
-    }
-
-    public BigDecimal getValue() {
-        return value;
-    }
-
-    public void setValue(BigDecimal value) {
-        this.value = value;
-    }
-            
-    
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public Games getIdGame() { return idGame; }
+    public void setIdGame(Games idGame) { this.idGame = idGame; }
+    public Order getIdOrder() { return idOrder; }
+    public void setIdOrder(Order idOrder) { this.idOrder = idOrder; }
+    public GameKeys getIdKey() { return idKey; }
+    public void setIdKey(GameKeys idKey) { this.idKey = idKey; }
+    public BigDecimal getDiscount() { return discount; }
+    public void setDiscount(BigDecimal discount) { this.discount = discount; }
+    public BigDecimal getAddition() { return addition; }
+    public void setAddition(BigDecimal addition) { this.addition = addition; }
+    public BigDecimal getValue() { return value; }
+    public void setValue(BigDecimal value) { this.value = value; }
 }

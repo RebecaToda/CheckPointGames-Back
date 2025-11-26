@@ -35,7 +35,6 @@ public class OrderController {
     public ResponseEntity<?> create(@RequestBody OrderRequestDTO orderRequest) {
         try {
             Order saved = orderService.createOrder(orderRequest);
-
             return ResponseEntity.ok(Map.of(
                     "message", "Pedido criado com sucesso",
                     "orderId", saved.getId(),
@@ -43,13 +42,9 @@ public class OrderController {
                     "status", 201,
                     "timestamp", LocalDateTime.now().toString()
             ));
-
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of(
-                    "message", e.getMessage() != null ? e.getMessage() : "Erro interno no servidor",
-                    "status", 500
-            ));
+            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Erro interno"));
         }
     }
 
@@ -57,60 +52,39 @@ public class OrderController {
     public ResponseEntity<?> getMyOrders() {
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
             Users user = usersRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
             List<Order> orders = orderService.showOrderByCostumer(user.getId());
-
             return ResponseEntity.ok(orders);
-
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", "Erro ao buscar pedidos: " + e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("message", "Erro ao buscar pedidos"));
         }
     }
-
 
     @GetMapping("/verificar-pagamento")
     public String verificarPagamento(@RequestParam String preferenceId) throws MPException, MPApiException {
         paymentService.verificarPagamento(preferenceId);
-        return "Consulta de pagamento realizada. Confira o console para detalhes.";
+        return "OK";
     }
 
     @PostMapping("/updateOrder")
-    public Order updateOrder(@Valid @RequestBody Order order) {
-        return orderService.updateOrder(order);
-    }
+    public Order updateOrder(@Valid @RequestBody Order order) { return orderService.updateOrder(order); }
 
     @GetMapping("/showOrders")
-    public List<Order> showOrders(Order order) {
-        return orderService.showGames(order);
-    }
-
-    @GetMapping("/showOpenOrders")
-    public List<Order> showOpenOrders(Order order) {
-        return orderService.showOpenOrders(order);
-    }
-
-    @GetMapping("/showClosedOrders")
-    public List<Order> showClosedOrders(Order order) {
-        return orderService.showClosedOrders(order);
-    }
-
-    @GetMapping("/showCanceledOrders")
-    public List<Order> showCanceledOrders(Order order) {
-        return orderService.showCanceledOrders(order);
-    }
-
-    @GetMapping("/showOrdersByCostumer/{id}")
-    public List<Order> showOrderByCostumer(@PathVariable Integer id) {
-        return orderService.showOrderByCostumer(id);
-    }
+    public List<Order> showOrders(Order order) { return orderService.showGames(order); }
 
     @GetMapping("/showOrdersById/{id}")
     public ResponseEntity<Order> showOrdersById(@PathVariable Integer id) {
-        return orderService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return orderService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/updateStatus/{id}")
+    public ResponseEntity<?> updateStatus(@PathVariable Integer id, @RequestBody Map<String, Integer> statusMap) {
+
+        Order order = orderService.findById(id).orElseThrow();
+        order.setStatus(statusMap.get("status"));
+        orderService.updateOrder(order);
+        return ResponseEntity.ok().build();
     }
 }
