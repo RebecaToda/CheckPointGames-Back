@@ -1,5 +1,5 @@
 package com.checkpointgames.app.entity;
-
+import java.time.LocalDate;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
@@ -32,6 +32,9 @@ public class Users {
     @Column(name = "AGE")
     private Integer age;
 
+    @Column(name = "BIRTH_DATE")
+    private LocalDate birthDate;
+
     @NotBlank
     @Size(max = 15)
     @Column(name = "NUMBER")
@@ -62,6 +65,9 @@ public class Users {
 
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
+
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 
     public String getNumber() { return number; }
     public void setNumber(String number) { this.number = number; }

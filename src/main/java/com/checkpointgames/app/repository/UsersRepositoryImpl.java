@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDate; // Importante para a data funcionar
 
 @Repository
 @Transactional
@@ -21,8 +22,8 @@ public class UsersRepositoryImpl implements UsersRepositoryCustom {
     }
 
     @Override
-    public void updateUser(String email, String name, Integer age, Integer function, Integer status, String password, String number, String profileImage, Integer id){
-        entityManager.createQuery("UPDATE Users u set u.email = :email, u.name = :name, u.age = :age, u.function = :function, u.status = :status, u.password = :password, u.number = :number, u.profileImage = :profileImage where u.id = :id")
+    public void updateUser(String email, String name, Integer age, Integer function, Integer status, String password, String number, String profileImage, LocalDate birthDate, Integer id){
+        entityManager.createQuery("UPDATE Users u set u.email = :email, u.name = :name, u.age = :age, u.function = :function, u.status = :status, u.password = :password, u.number = :number, u.profileImage = :profileImage, u.birthDate = :birthDate where u.id = :id")
                 .setParameter("email", email)
                 .setParameter("name", name)
                 .setParameter("age", age)
@@ -31,6 +32,7 @@ public class UsersRepositoryImpl implements UsersRepositoryCustom {
                 .setParameter("password", password)
                 .setParameter("number", number)
                 .setParameter("profileImage", profileImage)
+                .setParameter("birthDate", birthDate)
                 .setParameter("id", id)
                 .executeUpdate();
     }

@@ -50,6 +50,7 @@ public class UserService{
                 encrypted,
                 user.getNumber(),
                 user.getProfileImage(),
+                user.getBirthDate(),
                 user.getId()
         );
 
