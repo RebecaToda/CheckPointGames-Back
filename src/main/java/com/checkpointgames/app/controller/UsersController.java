@@ -32,7 +32,7 @@ public class UsersController {
     public Users updateUser(@Valid @RequestBody Users user){
         return userService.updateUser(user);
     }
-    
+
     @GetMapping("/showUsers")
     public ResponseEntity<List<Users>> showUsers() {
         return ResponseEntity.ok(userService.findAll());

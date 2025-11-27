@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.checkpointgames.app.repository.UsersRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import java.util.List;
 
 @Service
@@ -41,7 +40,18 @@ public class UserService{
                 .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));
 
         String encrypted = passwordEncoder.encode(user.getPassword());
-        usersRepository.updateUser(user.getEmail(), user.getName(), user.getAge(), user.getFunction(), user.getStatus(), encrypted, user.getNumber(), user.getId());
+
+        usersRepository.updateUser(
+                user.getEmail(),
+                user.getName(),
+                user.getAge(),
+                user.getFunction(),
+                user.getStatus(),
+                encrypted,
+                user.getNumber(),
+                user.getProfileImage(),
+                user.getId()
+        );
 
         return usersRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("Erro ao atualizar usuário"));
