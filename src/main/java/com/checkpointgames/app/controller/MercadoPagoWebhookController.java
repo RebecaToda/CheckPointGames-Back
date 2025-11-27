@@ -1,54 +1,53 @@
 package com.checkpointgames.app.controller;
 
-import com.checkpointgames.app.repository.OrdersRepository;
-import com.checkpointgames.app.service.PaymentValidationService;
-import java.util.Map;
+import com.checkpointgames.app.service.PaymentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
-@RequestMapping("/webhook/mercadopago")
+@RequestMapping("/api/v1/webhook")
 public class MercadoPagoWebhookController {
 
-    private final PaymentValidationService paymentValidationService;
-    private final OrdersRepository ordersRepository;
+    @Autowired
+    private PaymentService paymentService;
 
-    public MercadoPagoWebhookController(PaymentValidationService paymentValidationService,
-                                        OrdersRepository ordersRepository) {
-        this.paymentValidationService = paymentValidationService;
-        this.ordersRepository = ordersRepository;
-    }
+    @PostMapping("/mercadopago")
+    public ResponseEntity<?> receiveNotification(@RequestBody Map<String, Object> payload, @RequestParam(required = false) String topic, @RequestParam(required = false) Long id) {
 
-    @PostMapping
-    public ResponseEntity<String> handleWebhook(@RequestBody Map<String, Object> body) {
-
-        System.out.println("Webhook recebido: " + body);
 
         try {
-            if (!body.containsKey("type") || !body.containsKey("data")) {
-                return ResponseEntity.badRequest().body("Webhook invÃ¡lido");
+            Long paymentId = null;
+
+
+            if (id != null) {
+                paymentId = id;
             }
 
-            String type = body.get("type").toString();
-
-            // SÃ³ processa notificaÃ§Ãµes de pagamento
-            if (!"payment".equals(type)) {
-                return ResponseEntity.ok("Ignorado");
+            else if (payload.containsKey("data") && payload.get("data") instanceof Map) {
+                Map<String, Object> data = (Map<String, Object>) payload.get("data");
+                if (data.containsKey("id")) {
+                    paymentId = Long.valueOf(data.get("id").toString());
+                }
             }
 
-            Map<String, Object> data = (Map<String, Object>) body.get("data");
-            Long paymentId = Long.valueOf(data.get("id").toString());
+            else if ("payment".equals(payload.get("type")) && payload.containsKey("data.id")) {
+                paymentId = Long.valueOf(payload.get("data.id").toString());
+            }
 
-            paymentValidationService.processPayment(paymentId);
+            if (paymentId != null) {
+                System.out.println("Webhook recebido para Pagamento ID: " + paymentId);
+                
+                paymentService.processPaymentNotification(paymentId);
+            }
 
-            return ResponseEntity.ok("OK");
+            return ResponseEntity.ok().build();
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Erro interno");
+            return ResponseEntity.status(500).build();
         }
     }
 }
